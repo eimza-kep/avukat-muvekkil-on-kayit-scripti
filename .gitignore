@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+hukuk_dosyalar.json
+.DS_Store
+Thumbs.db

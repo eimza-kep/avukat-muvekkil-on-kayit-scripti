@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müvekkil Ön Görüşme ve Dosya Kabul Formu | Hukuk Bürosu</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #172554;
+            --secondary: #0f172a;
+            --gold: #b45309;
+            --gold-light: #fef3c7;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --success: #15803d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); line-height: 1.55; padding: 32px 16px; min-height: 100vh; }
+
+        .container { max-width: 880px; margin: 0 auto; }
+
+        /* Header */
+        .header {
+            text-align: center; margin-bottom: 28px; background: white; padding: 32px 24px;
+            border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            position: relative; overflow: hidden;
+        }
+        .header::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1e3a8a, #d97706, #1e3a8a);
+        }
+        .header-badge {
+            display: inline-block; background: var(--gold-light); color: var(--gold);
+            font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
+        }
+        .header h1 { font-size: 1.6rem; color: var(--secondary); margin-bottom: 8px; font-weight: 800; letter-spacing: -0.02em; }
+        .header p { font-size: 0.9rem; color: var(--text-muted); max-width: 680px; margin: 0 auto; }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+            padding: 26px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .card-title {
+            font-size: 1.05rem; font-weight: 700; color: var(--secondary); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: span 2; }
+        label { font-size: 0.83rem; font-weight: 600; color: #334155; }
+        label span.req { color: #dc2626; margin-left: 2px; }
+
+        input, select, textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.88rem; outline: none; background: #f8fafc; color: var(--text-main);
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        textarea { min-height: 90px; resize: vertical; }
+
+        /* Conflict Alert Info Box */
+        .conflict-info-box {
+            background: #fffbeb; border-left: 4px solid var(--gold); padding: 12px 16px;
+            border-radius: 0 8px 8px 0; font-size: 0.82rem; color: #92400e; margin-bottom: 14px;
+        }
+
+        /* Evidence Checkboxes */
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+        .checkbox-item {
+            display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc;
+            border: 1px solid var(--border); border-radius: 8px; font-size: 0.84rem; cursor: pointer;
+        }
+        .checkbox-item input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%; background: var(--primary); color: white; border: none; padding: 14px;
+            border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        /* Result View */
+        .result-view {
+            display: none; background: white; border: 2px solid #cbd5e1; border-radius: 12px;
+            padding: 36px 24px; text-align: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        }
+        .intake-code {
+            display: inline-block; background: #eff6ff; border: 2px dashed var(--primary); color: var(--primary);
+            font-size: 1.4rem; font-weight: 800; padding: 8px 24px; border-radius: 8px; margin: 16px 0; letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-badge">1136 SAYILI AVUKATLIK KANUNU KAPSAMINDA</div>
+        <h1>Müvekkil Ön Görüşme ve Dosya Kabul Formu</h1>
+        <p>
+            Hukuki uyuşmazlığınızın doğru analiz edilmesi, Avukatlık Kanunu gereği çıkar çatışması denetiminin yapılması ve randevu planlaması amacıyla işbu ön bilgi formunu doldurunuz.
+        </p>
+    </div>
+
+    <form id="legalForm" onsubmit="submitLegalForm(event)">
+        <!-- 1. Müvekkil Bilgileri -->
+        <div class="card">
+            <h2 class="card-title">👤 1. Müvekkil / Başvuran Bilgileri</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Başvuru Türü <span class="req">*</span></label>
+                    <select id="clientType" required>
+                        <option value="Bireysel">Bireysel / Şahıs</option>
+                        <option value="Tüzel Kişi">Tüzel Kişi / Şirket</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ad Soyad / Firma Unvanı <span class="req">*</span></label>
+                    <input type="text" id="fullName" required placeholder="Adınız Soyadınız veya Ticari Unvanınız">
+                </div>
+                <div class="form-group">
+                    <label>T.C. Kimlik No / Vergi Kimlik No <span class="req">*</span></label>
+                    <input type="text" id="idNumber" required placeholder="11 haneli TCKN veya 10 haneli VKN">
+                </div>
+                <div class="form-group">
+                    <label>İletişim Telefonu (GSM) <span class="req">*</span></label>
+                    <input type="tel" id="phone" required placeholder="05XX XXX XX XX">
+                </div>
+                <div class="form-group">
+                    <label>E-Posta Adresi <span class="req">*</span></label>
+                    <input type="email" id="email" required placeholder="ad.soyad@domain.com">
+                </div>
+                <div class="form-group">
+                    <label>İkametgâh Şehri <span class="req">*</span></label>
+                    <input type="text" id="city" required placeholder="Örn: Ankara">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Uyuşmazlık & Karşı Taraf (Conflict Check) -->
+        <div class="card">
+            <h2 class="card-title">⚖️ 2. Hukuki Uyuşmazlık Konusu ve Karşı Taraf</h2>
+            
+            <div class="conflict-info-box">
+                🔍 <b>Çıkar Çatışması (Conflict of Interest) Uyarısı:</b> Avukatlık Kanunu Madde 38 uyarınca, büromuzun karşı tarafı temsil edip etmediğini teyit edebilmemiz için karşı taraf bilgilerinin girilmesi yasal zorunluluktur.
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Hukuki Uyuşmazlık Alanı <span class="req">*</span></label>
+                    <select id="legalCategory" required>
+                        <option value="">Seçiniz...</option>
+                        <option value="İş Hukuku (Kıdem, İhbar, İşe İade)">İş Hukuku (Kıdem, İhbar, İşe İade vb.)</option>
+                        <option value="Ticaret & Şirketler Hukuku">Ticaret & Şirketler Hukuku</option>
+                        <option value="Gayrimenkul & Kira Hukuku">Gayrimenkul, Tahliye & Kira Hukuku</option>
+                        <option value="İcra & Alacak Takibi">İcra, İflas & Alacak Takibi</option>
+                        <option value="Aile & Boşanma Hukuku">Aile, Boşanma, Nafaka & Mal Paylaşımı</option>
+                        <option value="Ceza Hukuku">Ceza Hukuku & Soruşturma</option>
+                        <option value="Bilişim, E-Ticaret & KVKK">Bilişim, E-Ticaret & KVKK Hukuku</option>
+                        <option value="Diğer">Diğer Hukuki Uyuşmazlıklar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Karşı Taraf (Davalı / Borçlu) Adı / Unvanı <span class="req">*</span></label>
+                    <input type="text" id="opponentName" required placeholder="Davacısı/Davalısı olduğunuz kişi veya şirket">
+                </div>
+                <div class="form-group">
+                    <label>Karşı Taraf TCKN / VKN (Biliniyorsa)</label>
+                    <input type="text" id="opponentVkn" placeholder="Bilinmiyorsa boş bırakabilirsiniz">
+                </div>
+                <div class="form-group">
+                    <label>Açılmış Dava / İcra Dosyası Var mı?</label>
+                    <select id="existingCase">
+                        <option value="Hayır, Henüz Dava Açılmadı">Hayır, Henüz Dava Açılmadı (Dava Açmak İstiyorum)</option>
+                        <option value="Evet, Mahkemede Dava Devam Ediyor">Evet, Mahkemede Dava Devam Ediyor</option>
+                        <option value="Evet, Aleyhime İcra Takibi Başlatıldı">Evet, Aleyhime İcra Takibi Başlatıldı</option>
+                        <option value="Arabuluculuk Aşamasında">Arabuluculuk Aşamasında</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>Olayın ve Uyuşmazlığın Kısa Özeti <span class="req">*</span></label>
+                    <textarea id="caseSummary" required placeholder="Tarihler, yaşanan olaylar ve talep ettiğiniz hukuki sonucu özetleyiniz..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Delil Listesi & Randevu Tercihi -->
+        <div class="card">
+            <h2 class="card-title">📂 3. Mevcut Delil Durumu ve Randevu Tercihi</h2>
+            
+            <label style="margin-bottom: 8px;">Elinizde Bulunan Belge ve Deliller:</label>
+            <div class="checkbox-grid">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="ev1" value="Yazılı Sözleşme / Protokol">
+                    <span>Yazılı Sözleşme / Protokol</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="ev2" value="Banka Dekontları / Hesap Özeti">
+                    <span>Banka Dekontu / Hesap Özeti</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="ev3" value="WhatsApp / SMS / E-Posta Kayıtları">
+                    <span>WhatsApp / E-Posta Yazışmaları</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="ev4" value="Noter İhtarnamesi">
+                    <span>Noter İhtarnamesi / KEP İletisi</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="ev5" value="Fatura / Makbuz">
+                    <span>Fatura / e-SMM / Makbuz</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="ev6" value="Tanık Beyanları">
+                    <span>Dinletilebilecek Tanıklar</span>
+                </label>
+            </div>
+
+            <div class="form-grid" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Randevu / Danışma Tercihi <span class="req">*</span></label>
+                    <select id="consultationType" required>
+                        <option value="Yüz Yüze (Büromuzda)">Yüz Yüze (Hukuk Büromuzda)</option>
+                        <option value="Online (Zoom / Google Meet)">Online Görüntülü Toplantı (Zoom / Meet)</option>
+                        <option value="Telefon ile Ön Danışma">Telefon ile Ön Bilgi Görüşmesi</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Görüşme İçin Uygun Gün / Saat Dilimi</label>
+                    <input type="text" id="preferredTime" placeholder="Örn: Hafta içi öğleden sonra">
+                </div>
+            </div>
+
+            <div style="margin-top: 18px; display: flex; align-items: flex-start; gap: 8px;">
+                <input type="checkbox" id="ndaCheck" required style="width: 18px; height: 18px; margin-top: 3px; cursor: pointer;">
+                <label for="ndaCheck" style="font-size: 0.82rem; color: #475569; cursor: pointer;">
+                    Paylaştığım tüm bilgilerin Avukatlık Kanunu'nun 36. maddesinde yer alan <b>avukatlık sır saklama yükümlülüğü</b> ve 6698 sayılı KVKK kapsamında gizlilikle korunacağını bildiğimi beyan eder, ön görüşme amacıyla işlenmesini onaylarım.
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+            <span>⚖️ Ön Görüşme Kaydını Oluştur</span>
+        </button>
+    </form>
+
+    <!-- Success View -->
+    <div class="result-view" id="resultView">
+        <div style="font-size: 3rem; margin-bottom: 12px;">⚖️</div>
+        <h2 style="font-size: 1.4rem; color: var(--secondary);">Ön Görüşme Kaydınız Oluşturuldu</h2>
+        <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 6px;">
+            Dosyanız çıkar çatışması ve ilk hukuki değerlendirme için yetkili avukatımıza iletilmiştir.
+        </p>
+
+        <div>
+            <span style="font-size: 0.85rem; color: #64748b;">Ön Kayıt Dosya Referans No:</span><br>
+            <div class="intake-code" id="intakeCodeDisplay">DOSYA-2026-0000</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; max-width: 500px; margin: 16px auto; font-size: 0.85rem; text-align: left;">
+            <div><b>Müvekkil:</b> <span id="resClient"></span></div>
+            <div><b>Uyuşmazlık:</b> <span id="resCategory"></span></div>
+            <div><b>Karşı Taraf:</b> <span id="resOpponent"></span></div>
+            <div><b>Görüşme Türü:</b> <span id="resType"></span></div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 24px;">
+            <button class="btn-submit" style="width: auto; padding: 10px 20px;" onclick="window.print()">🖨️ Ön Görüşme Formunu Yazdır</button>
+            <button class="btn-submit" style="width: auto; padding: 10px 20px; background: #e2e8f0; color: #334155;" onclick="location.reload()">➕ Yeni Ön Kayıt</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function submitLegalForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerText = '⏳ Kaydediliyor...';
+
+    const evidences = [];
+    for (let i = 1; i <= 6; i++) {
+        const el = document.getElementById('ev' + i);
+        if (el && el.checked) evidences.push(el.value);
+    }
+
+    const payload = {
+        client_type: document.getElementById('clientType').value,
+        full_name: document.getElementById('fullName').value.trim(),
+        id_number: document.getElementById('idNumber').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        legal_category: document.getElementById('legalCategory').value,
+        opponent_name: document.getElementById('opponentName').value.trim(),
+        opponent_vkn: document.getElementById('opponentVkn').value.trim(),
+        existing_case: document.getElementById('existingCase').value,
+        case_summary: document.getElementById('caseSummary').value.trim(),
+        evidences: evidences,
+        consultation_type: document.getElementById('consultationType').value,
+        preferred_time: document.getElementById('preferredTime').value.trim(),
+        created_at: new Date().toISOString()
+    };
+
+    let intakeCode = 'DOSYA-2026-' + Math.floor(1000 + Math.random() * 9000);
+
+    try {
+        const res = await fetch('/api/on-kayit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.intake_code) intakeCode = data.intake_code;
+        }
+    } catch (err) {
+        const local = JSON.parse(localStorage.getItem('avukat_intakes') || '[]');
+        payload.intake_code = intakeCode;
+        local.push(payload);
+        localStorage.setItem('avukat_intakes', JSON.stringify(local));
+    }
+
+    document.getElementById('legalForm').style.display = 'none';
+    document.getElementById('resultView').style.display = 'block';
+    document.getElementById('intakeCodeDisplay').innerText = intakeCode;
+    document.getElementById('resClient').innerText = payload.full_name;
+    document.getElementById('resCategory').innerText = payload.legal_category;
+    document.getElementById('resOpponent').innerText = payload.opponent_name;
+    document.getElementById('resType').innerText = payload.consultation_type;
+}
+</script>
+
+</body>
+</html>

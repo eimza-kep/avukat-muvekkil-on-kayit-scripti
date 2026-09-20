@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hukuk Bürosu Dosya Kabul ve Çıkar Çatışması Portalı</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --success: #15803d;
+            --warning: #b45309;
+            --danger: #b91c1c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); padding: 24px; }
+        .container { max-width: 1240px; margin: 0 auto; }
+
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px;
+        }
+        .topbar h1 { font-size: 1.3rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+
+        /* Conflict Check Box */
+        .conflict-search-box {
+            background: #fffbeb; border: 2px solid #fde68a; border-radius: 12px; padding: 18px 24px;
+            margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+        }
+        .conflict-search-input {
+            flex: 1; min-width: 260px; padding: 10px 14px; border: 1px solid #d97706; border-radius: 8px; font-size: 0.9rem; outline: none; background: white;
+        }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: white; border: 1px solid var(--border); border-radius: 10px; padding: 18px;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .stat-title { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .stat-value { font-size: 1.7rem; font-weight: 800; color: #0f172a; }
+
+        /* Table */
+        .table-card { background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .table-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border); background: #fafafa;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+        .search-input {
+            padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; width: 280px; outline: none;
+        }
+        .btn {
+            padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            border: 1px solid var(--border); background: white; color: #334155; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn:hover { background: #f1f5f9; }
+        .btn-primary { background: var(--primary); color: white; border: none; }
+        .btn-primary:hover { background: #172554; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.86rem; }
+        th { background: #f8fafc; padding: 12px 16px; border-bottom: 1px solid var(--border); color: #475569; font-weight: 600; }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:hover { background: #f8fafc; }
+
+        .badge-conflict { background: #fee2e2; color: #991b1b; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="topbar">
+        <h1>⚖️ Hukuk Bürosu Dosya Kabul & Çıkar Çatışması Portalı</h1>
+        <div style="display: flex; gap: 10px;">
+            <a href="index.html" class="btn" target="_blank">🌐 Ön Görüşme Formunu Aç</a>
+            <button class="btn btn-primary" onclick="exportCsv()">📥 CSV Olarak İndir</button>
+        </div>
+    </div>
+
+    <!-- Conflict Check Search Bar -->
+    <div class="conflict-search-box">
+        <div>
+            <span style="font-weight: 800; color: #92400e; font-size: 0.95rem;">🔍 Çıkar Çatışması (Conflict Check) Sorgusu:</span>
+            <p style="font-size: 0.8rem; color: #b45309;">Yeni gelen müvekkil veya karşı tarafın geçmiş dosyalarda yer alıp almadığını kontrol edin.</p>
+        </div>
+        <input type="text" id="conflictInput" class="conflict-search-input" placeholder="Kişi adı, şirket unvanı veya TCKN/VKN yazın..." oninput="runConflictCheck()">
+        <span id="conflictResult" style="font-size: 0.85rem; font-weight: 700;"></span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-title">Toplam Başvuru</span>
+            <span class="stat-value" id="statTotal">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-title">Ön İncelemede</span>
+            <span class="stat-value" id="statReview" style="color: var(--warning);">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-title">Randevu Verilen</span>
+            <span class="stat-value" id="statAppt" style="color: var(--primary);">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-title">Vekaletname / Dosya Açıldı</span>
+            <span class="stat-value" id="statAccepted" style="color: var(--success);">0</span>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <input type="text" class="search-input" id="searchBox" placeholder="Dosya No, Müvekkil veya Karşı Taraf ara..." oninput="filterTable()">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Avukatlık Kanunu Md. 36 (Sır Saklama) koruması altındadır.</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dosya Ref No</th>
+                    <th>Müvekkil Adayı</th>
+                    <th>Uyuşmazlık Alanı</th>
+                    <th>Karşı Taraf (Davalı/Borçlu)</th>
+                    <th>Görüşme Tercihi</th>
+                    <th>Kayıt Tarihi</th>
+                    <th>Dosya Durumu</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let intakes = [];
+
+async function loadIntakes() {
+    try {
+        const res = await fetch('/api/dosya-listesi');
+        if (res.ok) {
+            intakes = await res.json();
+        }
+    } catch (e) {
+        intakes = JSON.parse(localStorage.getItem('avukat_intakes') || '[]');
+    }
+
+    if (intakes.length === 0) {
+        intakes = [
+            {
+                intake_code: "DOSYA-2026-8192",
+                full_name: "Bora Aksoy",
+                id_number: "38192019482",
+                phone: "0532 111 22 33",
+                legal_category: "İş Hukuku (Kıdem, İhbar, İşe İade)",
+                opponent_name: "Mega Perakende Mağazacılık A.Ş.",
+                opponent_vkn: "6120481920",
+                consultation_type: "Yüz Yüze (Büromuzda)",
+                status: "Ön İncelemede",
+                created_at: new Date().toISOString()
+            },
+            {
+                intake_code: "DOSYA-2026-3401",
+                full_name: "Zeynep Korkmaz",
+                id_number: "20194829102",
+                phone: "0544 222 33 44",
+                legal_category: "Gayrimenkul & Kira Hukuku",
+                opponent_name: "Hakan Güneş",
+                opponent_vkn: "10293847561",
+                consultation_type: "Online (Zoom / Google Meet)",
+                status: "Randevu Verildi",
+                created_at: new Date(Date.now() - 3 * 86400000).toISOString()
+            }
+        ];
+        localStorage.setItem('avukat_intakes', JSON.stringify(intakes));
+    }
+
+    renderTable(intakes);
+    updateStats();
+}
+
+function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    data.forEach((item, idx) => {
+        const dateStr = new Date(item.created_at).toLocaleDateString('tr-TR');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><b>${item.intake_code}</b></td>
+            <td>${item.full_name}<br><small style="color:#64748b;">${item.phone}</small></td>
+            <td>${item.legal_category}</td>
+            <td><b>${item.opponent_name}</b></td>
+            <td>${item.consultation_type}</td>
+            <td>${dateStr}</td>
+            <td>
+                <select onchange="updateStatus(${idx}, this.value)" style="padding: 4px 8px; border-radius:6px; border:1px solid #cbd5e1; font-size:0.78rem;">
+                    <option value="Ön İncelemede" ${item.status === 'Ön İncelemede' ? 'selected' : ''}>Ön İncelemede</option>
+                    <option value="Randevu Verildi" ${item.status === 'Randevu Verildi' ? 'selected' : ''}>Randevu Verildi</option>
+                    <option value="Vekaletname / Dosya Açıldı" ${item.status === 'Vekaletname / Dosya Açıldı' ? 'selected' : ''}>Vekaletname / Dosya Açıldı</option>
+                    <option value="Çıkar Çatışması / Red" ${item.status === 'Çıkar Çatışması / Red' ? 'selected' : ''}>Çıkar Çatışması / Red</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function updateStatus(idx, status) {
+    intakes[idx].status = status;
+    localStorage.setItem('avukat_intakes', JSON.stringify(intakes));
+    updateStats();
+}
+
+function updateStats() {
+    document.getElementById('statTotal').innerText = intakes.length;
+    let rev = 0, appt = 0, acc = 0;
+    intakes.forEach(i => {
+        if (i.status === 'Ön İncelemede') rev++;
+        if (i.status === 'Randevu Verildi') appt++;
+        if (i.status === 'Vekaletname / Dosya Açıldı') acc++;
+    });
+    document.getElementById('statReview').innerText = rev;
+    document.getElementById('statAppt').innerText = appt;
+    document.getElementById('statAccepted').innerText = acc;
+}
+
+function filterTable() {
+    const q = document.getElementById('searchBox').value.toLowerCase().trim();
+    const filtered = intakes.filter(i =>
+        i.full_name.toLowerCase().includes(q) ||
+        i.opponent_name.toLowerCase().includes(q) ||
+        i.intake_code.toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+}
+
+function runConflictCheck() {
+    const q = document.getElementById('conflictInput').value.toLowerCase().trim();
+    const resEl = document.getElementById('conflictResult');
+
+    if (!q || q.length < 3) {
+        resEl.innerHTML = '';
+        return;
+    }
+
+    const matches = [];
+    intakes.forEach(i => {
+        if (i.full_name.toLowerCase().includes(q)) matches.push(`Geçmiş Müvekkil: ${i.full_name} (${i.intake_code})`);
+        if (i.opponent_name.toLowerCase().includes(q)) matches.push(`Geçmiş Karşı Taraf: ${i.opponent_name} (${i.intake_code})`);
+    });
+
+    if (matches.length > 0) {
+        resEl.innerHTML = `<span style="color:#b91c1c;">🚨 ÇATIŞMA RİSKİ: ${matches.length} eşleşme bulundu! (${matches.join(', ')})</span>`;
+    } else {
+        resEl.innerHTML = `<span style="color:#15803d;">✅ Temiz: Geçmiş kayıtlarda çıkar çatışması bulunamadı.</span>`;
+    }
+}
+
+function exportCsv() {
+    let csv = "Dosya No,Muvekkil,TCKN,Telefon,Eposta,Kategori,Karsi Taraf,Gorusme,Durum,Tarih\n";
+    intakes.forEach(i => {
+        csv += `"${i.intake_code}","${i.full_name}","${i.id_number}","${i.phone}","${i.email}","${i.legal_category}","${i.opponent_name}","${i.consultation_type}","${i.status}","${i.created_at}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "avukat_dosya_kabulleri.csv";
+    link.click();
+}
+
+window.onload = loadIntakes;
+</script>
+
+</body>
+</html>
