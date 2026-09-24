@@ -1,6 +1,7 @@
 # ⚖️ Hukuk Büroları İçin Müvekkil Ön Görüşme ve Çıkar Çatışması Scripti
 
 [![CI](https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti/actions/workflows/ci.yml/badge.svg)](https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti/actions/workflows/ci.yml)
+[![Canlı Demo](https://img.shields.io/badge/Demo-Canl%C4%B1%20Test%20Et-brightgreen.svg)](https://eimza-kep.github.io/avukat-muvekkil-on-kayit-scripti/)
 [![Lisans: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Kurulum Süresi](https://img.shields.io/badge/Kurulum-1%20Dakika-brightgreen)](#)
 [![Bağımlılık](https://img.shields.io/badge/ba%C4%9F%C4%B1ml%C4%B1l%C4%B1k-0%20(S%C4%B1f%C4%B1r)-blue)](#)
