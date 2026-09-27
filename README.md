@@ -50,6 +50,19 @@ python server.py
 
 ---
 
+## 🌐 LegalTech & E-Dönüşüm Açık Kaynak Ekosistemi
+
+Bu ön kayıt ve müvekkil kabul yazılımı, [@eimza-kep](https://github.com/eimza-kep) açık kaynak ekosisteminin hukuk bürosu otomasyon modülüdür. İlgili diğer araçlar:
+
+* ⚖️ [avukat-hukuk-excel-hesaplamalari](https://github.com/eimza-kep/avukat-hukuk-excel-hesaplamalari) - Baro AAÜT vekalet ücreti, arabuluculuk ve icra harç hesaplayıcıları.
+* 📄 [udf2md](https://github.com/eimza-kep/udf2md) - UYAP `.udf` dava dosyalarını Markdown ve JSON'a dönüştürücü LegalTech aracı.
+* 📝 [javascript-udf-editor](https://github.com/eimza-kep/uyap-web-udf-editor) - Tarayıcı tabanlı sıfır Java UYAP dilekçe görüntüleyici ve düzenleyici.
+* 🔒 [kurumsal-kvkk-basvuru-scripti](https://github.com/eimza-kep/kurumsal-kvkk-basvuru-scripti) - Müvekkil KVKK aydınlatma ve açık rıza kayıt portali.
+* 🌟 [awesome-turkiye-e-donusum](https://github.com/eimza-kep/awesome-turkiye-e-donusum) - Türkiye e-Dönüşüm açık kaynak araçları ve kütüphaneleri kürasyonu.
+
+---
+
 ## 📜 Lisans
 
 Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Bireysel avukatlar ve kurumsal hukuk büroları tarafından serbestçe kullanılabilir.
+
