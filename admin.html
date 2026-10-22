@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hukuk Bürosu Dosya Kabul ve Çıkar Çatışması Portalı</title>
+    <title>Hukuk Bürosu Dosya Kabul, Çıkar Çatışması & UDF Portalı</title>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -15,11 +15,12 @@
             --success: #15803d;
             --warning: #b45309;
             --danger: #b91c1c;
+            --blue: #2563eb;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background: var(--bg); color: var(--text-main); padding: 24px; }
-        .container { max-width: 1240px; margin: 0 auto; }
+        .container { max-width: 1280px; margin: 0 auto; }
 
         .topbar {
             display: flex; justify-content: space-between; align-items: center;
@@ -67,7 +68,17 @@
         td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: #f8fafc; }
 
-        .badge-conflict { background: #fee2e2; color: #991b1b; font-weight: 800; }
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center; padding: 20px; z-index: 50;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 720px; border-radius: 12px; padding: 24px;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .detail-row { display: flex; margin-bottom: 10px; font-size: 0.88rem; }
+        .detail-lbl { width: 180px; font-weight: 600; color: var(--text-muted); }
+        .detail-val { flex: 1; color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -124,9 +135,10 @@
                     <th>Müvekkil Adayı</th>
                     <th>Uyuşmazlık Alanı</th>
                     <th>Karşı Taraf (Davalı/Borçlu)</th>
-                    <th>Görüşme Tercihi</th>
+                    <th>Ekli UDF</th>
                     <th>Kayıt Tarihi</th>
                     <th>Dosya Durumu</th>
+                    <th>İşlem</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -134,8 +146,27 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal" id="detailModal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
+            <h3 id="modalTitle">Dosya Detayı</h3>
+            <button onclick="closeModal()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+        </div>
+        <div id="modalBody"></div>
+        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:14px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-primary" onclick="downloadModalVekaletXml()">📥 UYAP Vekalet XML</button>
+                <button class="btn" onclick="openVekaletPrint()">📜 Vekaletname Taslağı</button>
+            </div>
+            <button class="btn" onclick="window.print()">🖨️ Yazdır</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let intakes = [];
+let activeItem = null;
 
 async function loadIntakes() {
     try {
@@ -147,36 +178,6 @@ async function loadIntakes() {
         intakes = JSON.parse(localStorage.getItem('avukat_intakes') || '[]');
     }
 
-    if (intakes.length === 0) {
-        intakes = [
-            {
-                intake_code: "DOSYA-2026-8192",
-                full_name: "Bora Aksoy",
-                id_number: "38192019482",
-                phone: "0532 111 22 33",
-                legal_category: "İş Hukuku (Kıdem, İhbar, İşe İade)",
-                opponent_name: "Mega Perakende Mağazacılık A.Ş.",
-                opponent_vkn: "6120481920",
-                consultation_type: "Yüz Yüze (Büromuzda)",
-                status: "Ön İncelemede",
-                created_at: new Date().toISOString()
-            },
-            {
-                intake_code: "DOSYA-2026-3401",
-                full_name: "Zeynep Korkmaz",
-                id_number: "20194829102",
-                phone: "0544 222 33 44",
-                legal_category: "Gayrimenkul & Kira Hukuku",
-                opponent_name: "Hakan Güneş",
-                opponent_vkn: "10293847561",
-                consultation_type: "Online (Zoom / Google Meet)",
-                status: "Randevu Verildi",
-                created_at: new Date(Date.now() - 3 * 86400000).toISOString()
-            }
-        ];
-        localStorage.setItem('avukat_intakes', JSON.stringify(intakes));
-    }
-
     renderTable(intakes);
     updateStats();
 }
@@ -186,14 +187,18 @@ function renderTable(data) {
     tbody.innerHTML = '';
 
     data.forEach((item, idx) => {
-        const dateStr = new Date(item.created_at).toLocaleDateString('tr-TR');
+        const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : '-';
+        const udfBadge = item.udf_filename ?
+            `<span style="color:#15803d; font-weight:700;">✓ ${item.udf_document_type || 'UDF'}</span>` :
+            `<span style="color:#94a3b8;">-</span>`;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><b>${item.intake_code}</b></td>
-            <td>${item.full_name}<br><small style="color:#64748b;">${item.phone}</small></td>
-            <td>${item.legal_category}</td>
-            <td><b>${item.opponent_name}</b></td>
-            <td>${item.consultation_type}</td>
+            <td>${item.full_name}<br><small style="color:#64748b;">${item.phone || ''}</small></td>
+            <td>${item.legal_category || ''}</td>
+            <td><b>${item.opponent_name || ''}</b></td>
+            <td>${udfBadge}</td>
             <td>${dateStr}</td>
             <td>
                 <select onchange="updateStatus(${idx}, this.value)" style="padding: 4px 8px; border-radius:6px; border:1px solid #cbd5e1; font-size:0.78rem;">
@@ -203,9 +208,73 @@ function renderTable(data) {
                     <option value="Çıkar Çatışması / Red" ${item.status === 'Çıkar Çatışması / Red' ? 'selected' : ''}>Çıkar Çatışması / Red</option>
                 </select>
             </td>
+            <td>
+                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem;" onclick="viewDetail(${idx})">Detay</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function viewDetail(idx) {
+    activeItem = intakes[idx];
+    if (!activeItem) return;
+
+    document.getElementById('modalTitle').innerText = `${activeItem.intake_code} - ${activeItem.full_name}`;
+    const b = document.getElementById('modalBody');
+
+    const udfSection = activeItem.udf_filename ? `
+        <div style="margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:8px;">
+            <div style="font-weight:700; color:#166534; font-size:0.85rem;">📂 Ekli UYAP UDF Belgesi: ${activeItem.udf_filename} (${activeItem.udf_document_type})</div>
+            <div style="font-size:0.82rem; color:#14532d; margin-top:4px; max-height:120px; overflow-y:auto; white-space:pre-wrap;">${activeItem.udf_summary || ''}</div>
+        </div>
+    ` : `
+        <div style="margin-top:14px; background:#f8fafc; border:1px dashed #cbd5e1; padding:10px; border-radius:8px; font-size:0.82rem; color:#64748b;">
+            Ekli UDF evrakı bulunmuyor.
+        </div>
+    `;
+
+    b.innerHTML = `
+        <div class="detail-row"><div class="detail-lbl">Dosya Kodu:</div><div class="detail-val"><b>${activeItem.intake_code}</b></div></div>
+        <div class="detail-row"><div class="detail-lbl">Müvekkil Adayı:</div><div class="detail-val"><b>${activeItem.full_name}</b> (TCKN/VKN: ${activeItem.id_number || '-'})</div></div>
+        <div class="detail-row"><div class="detail-lbl">İletişim:</div><div class="detail-val">${activeItem.phone || '-'} | ${activeItem.email || '-'} (${activeItem.city || ''})</div></div>
+        <div class="detail-row"><div class="detail-lbl">Uyuşmazlık Alanı:</div><div class="detail-val"><b>${activeItem.legal_category || '-'}</b></div></div>
+        <div class="detail-row"><div class="detail-lbl">Karşı Taraf:</div><div class="detail-val"><b>${activeItem.opponent_name || '-'}</b> (VKN: ${activeItem.opponent_vkn || 'Belirtilmedi'})</div></div>
+        <div class="detail-row"><div class="detail-lbl">Mevcut Dava Durumu:</div><div class="detail-val">${activeItem.existing_case || '-'}</div></div>
+        <div class="detail-row"><div class="detail-lbl">Görüşme Tercihi:</div><div class="detail-val">${activeItem.consultation_type || '-'} (${activeItem.preferred_time || 'Zaman belirtilmedi'})</div></div>
+        <div style="margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:6px;">
+            <div style="font-weight:600; font-size:0.83rem; margin-bottom:4px;">Olayın Özeti:</div>
+            <div style="font-size:0.83rem; color:#475569; white-space:pre-wrap;">${activeItem.case_summary || ''}</div>
+        </div>
+        ${udfSection}
+    `;
+
+    document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('detailModal').style.display = 'none';
+}
+
+function downloadModalVekaletXml() {
+    if (!activeItem) return;
+    window.open(`/api/export-vekalet-xml?code=${activeItem.intake_code}`, '_blank');
+}
+
+async function openVekaletPrint() {
+    if (!activeItem) return;
+    try {
+        const res = await fetch(`/api/vekaletname-taslagi?code=${activeItem.intake_code}`);
+        if (res.ok) {
+            const data = await res.json();
+            const w = window.open('', '_blank');
+            w.document.write(`<pre style="font-family:'Times New Roman', Times, serif; font-size:14px; white-space:pre-wrap; line-height:1.6; padding:30px;">${data.vekaletname_text}</pre>`);
+            w.document.close();
+            w.print();
+        }
+    } catch (e) {
+        alert('Vekaletname taslağı alınamadı: ' + e.message);
+    }
 }
 
 function updateStatus(idx, status) {
@@ -230,9 +299,9 @@ function updateStats() {
 function filterTable() {
     const q = document.getElementById('searchBox').value.toLowerCase().trim();
     const filtered = intakes.filter(i =>
-        i.full_name.toLowerCase().includes(q) ||
-        i.opponent_name.toLowerCase().includes(q) ||
-        i.intake_code.toLowerCase().includes(q)
+        (i.full_name && i.full_name.toLowerCase().includes(q)) ||
+        (i.opponent_name && i.opponent_name.toLowerCase().includes(q)) ||
+        (i.intake_code && i.intake_code.toLowerCase().includes(q))
     );
     renderTable(filtered);
 }
@@ -248,8 +317,8 @@ function runConflictCheck() {
 
     const matches = [];
     intakes.forEach(i => {
-        if (i.full_name.toLowerCase().includes(q)) matches.push(`Geçmiş Müvekkil: ${i.full_name} (${i.intake_code})`);
-        if (i.opponent_name.toLowerCase().includes(q)) matches.push(`Geçmiş Karşı Taraf: ${i.opponent_name} (${i.intake_code})`);
+        if (i.full_name && i.full_name.toLowerCase().includes(q)) matches.push(`Müvekkil: ${i.full_name} (${i.intake_code})`);
+        if (i.opponent_name && i.opponent_name.toLowerCase().includes(q)) matches.push(`Karşı Taraf: ${i.opponent_name} (${i.intake_code})`);
     });
 
     if (matches.length > 0) {
@@ -260,9 +329,9 @@ function runConflictCheck() {
 }
 
 function exportCsv() {
-    let csv = "Dosya No,Muvekkil,TCKN,Telefon,Eposta,Kategori,Karsi Taraf,Gorusme,Durum,Tarih\n";
+    let csv = "Dosya No,Muvekkil,TCKN,Telefon,Eposta,Kategori,Karsi Taraf,UDF Belge,Durum,Tarih\n";
     intakes.forEach(i => {
-        csv += `"${i.intake_code}","${i.full_name}","${i.id_number}","${i.phone}","${i.email}","${i.legal_category}","${i.opponent_name}","${i.consultation_type}","${i.status}","${i.created_at}"\n`;
+        csv += `"${i.intake_code || ''}","${i.full_name || ''}","${i.id_number || ''}","${i.phone || ''}","${i.email || ''}","${i.legal_category || ''}","${i.opponent_name || ''}","${i.udf_filename || ''}","${i.status || ''}","${i.created_at || ''}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");

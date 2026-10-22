@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Müvekkil Ön Görüşme ve Dosya Kabul Formu | Hukuk Bürosu</title>
+    <title>Müvekkil Ön Görüşme ve Dosya Kabul Formu | UDF Entegrasyonu & UYAP Vekalet</title>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -17,12 +17,13 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --success: #15803d;
+            --blue: #2563eb;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); color: var(--text-main); line-height: 1.55; padding: 32px 16px; min-height: 100vh; }
 
-        .container { max-width: 880px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; }
 
         /* Header */
         .header {
@@ -38,7 +39,7 @@
             font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
         }
         .header h1 { font-size: 1.6rem; color: var(--secondary); margin-bottom: 8px; font-weight: 800; letter-spacing: -0.02em; }
-        .header p { font-size: 0.9rem; color: var(--text-muted); max-width: 680px; margin: 0 auto; }
+        .header p { font-size: 0.9rem; color: var(--text-muted); max-width: 720px; margin: 0 auto; }
 
         /* Cards */
         .card {
@@ -47,7 +48,7 @@
         }
         .card-title {
             font-size: 1.05rem; font-weight: 700; color: var(--secondary); margin-bottom: 16px;
-            display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
         }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -62,6 +63,17 @@
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
         textarea { min-height: 90px; resize: vertical; }
+
+        /* UDF Dropzone */
+        .udf-dropzone {
+            border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; text-align: center;
+            background: #f8fafc; cursor: pointer; transition: all 0.2s ease; margin-bottom: 16px;
+        }
+        .udf-dropzone:hover, .udf-dropzone.dragover { border-color: var(--blue); background: #eff6ff; }
+        .udf-badge {
+            display: inline-flex; align-items: center; gap: 6px; background: #dcfce7;
+            color: #15803d; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-top: 8px;
+        }
 
         /* Conflict Alert Info Box */
         .conflict-info-box {
@@ -95,6 +107,14 @@
             font-size: 1.4rem; font-weight: 800; padding: 8px 24px; border-radius: 8px; margin: 16px 0; letter-spacing: 0.05em;
         }
 
+        .action-btns {
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 20px;
+        }
+        .btn-act {
+            padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+            border: none; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+
         @media (max-width: 640px) {
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
@@ -107,11 +127,26 @@
 <div class="container">
     <!-- Header -->
     <div class="header">
-        <div class="header-badge">1136 SAYILI AVUKATLIK KANUNU KAPSAMINDA</div>
-        <h1>Müvekkil Ön Görüşme ve Dosya Kabul Formu</h1>
+        <div class="header-badge">1136 SAYILI AVUKATLIK KANUNU • UDF ENTEGRASYONU & UYAP VEKALET</div>
+        <h1>Müvekkil Ön Görüşme ve Dosya Kabul Portalı</h1>
         <p>
-            Hukuki uyuşmazlığınızın doğru analiz edilmesi, Avukatlık Kanunu gereği çıkar çatışması denetiminin yapılması ve randevu planlaması amacıyla işbu ön bilgi formunu doldurunuz.
+            Hukuki uyuşmazlığınızın doğru analiz edilmesi, Avukatlık Kanunu m. 38 gereği çıkar çatışması denetiminin yapılması, UYAP UDF evraklarının analizi ve vekaletname taslağının tanzimi amacıyla işbu ön bilgi formunu doldurunuz.
         </p>
+    </div>
+
+    <!-- Hızlı UDF Belge Yükleme Alanı -->
+    <div class="card">
+        <div class="card-title">
+            <span>📂 Hızlı Belge Analizi: UYAP UDF Evrakı Yükle</span>
+            <span style="font-size: 0.78rem; font-weight: 600; color: var(--blue);">Otomatik Olay Özeti</span>
+        </div>
+        <div class="udf-dropzone" id="udfDropzone" onclick="document.getElementById('udfFileInput').click()">
+            <div style="font-size: 2rem; margin-bottom: 6px;">📄</div>
+            <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">UYAP Doküman Editörü (.udf) Dosyasını Sürükleyip Bırakın veya Seçin</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Dava dilekçesi, tensip zaptı veya mahkeme kararını yükleyerek olay özetini otomatik çıkartın.</div>
+            <input type="file" id="udfFileInput" accept=".udf,.xml" style="display: none;" onchange="handleUdfUpload(event)">
+            <div id="udfStatusBadge" style="display: none;"></div>
+        </div>
     </div>
 
     <form id="legalForm" onsubmit="submitLegalForm(event)">
@@ -132,7 +167,7 @@
                 </div>
                 <div class="form-group">
                     <label>T.C. Kimlik No / Vergi Kimlik No <span class="req">*</span></label>
-                    <input type="text" id="idNumber" required placeholder="11 haneli TCKN veya 10 haneli VKN">
+                    <input type="text" id="idNumber" required placeholder="11 haneli TCKN veya 10 haneli VKN" maxlength="11">
                 </div>
                 <div class="form-group">
                     <label>İletişim Telefonu (GSM) <span class="req">*</span></label>
@@ -178,7 +213,7 @@
                 </div>
                 <div class="form-group">
                     <label>Karşı Taraf TCKN / VKN (Biliniyorsa)</label>
-                    <input type="text" id="opponentVkn" placeholder="Bilinmiyorsa boş bırakabilirsiniz">
+                    <input type="text" id="opponentVkn" placeholder="Bilinmiyorsa boş bırakabilirsiniz" maxlength="11">
                 </div>
                 <div class="form-group">
                     <label>Açılmış Dava / İcra Dosyası Var mı?</label>
@@ -191,7 +226,7 @@
                 </div>
                 <div class="form-group full">
                     <label>Olayın ve Uyuşmazlığın Kısa Özeti <span class="req">*</span></label>
-                    <textarea id="caseSummary" required placeholder="Tarihler, yaşanan olaylar ve talep ettiğiniz hukuki sonucu özetleyiniz..."></textarea>
+                    <textarea id="caseSummary" required placeholder="Tarihler, yaşanan olaylar ve talep ettiğiniz hukuki sonucu özetleyiniz (veya yukarıdan UDF yükleyiniz)..."></textarea>
                 </div>
             </div>
         </div>
@@ -252,7 +287,7 @@
         </div>
 
         <button type="submit" class="btn-submit" id="submitBtn">
-            <span>⚖️ Ön Görüşme Kaydını Oluştur</span>
+            <span>⚖️ Ön Görüşme Kaydını Oluştur & Vekaletname Taslağını Al</span>
         </button>
     </form>
 
@@ -269,21 +304,97 @@
             <div class="intake-code" id="intakeCodeDisplay">DOSYA-2026-0000</div>
         </div>
 
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; max-width: 500px; margin: 16px auto; font-size: 0.85rem; text-align: left;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; max-width: 540px; margin: 16px auto; font-size: 0.85rem; text-align: left;">
             <div><b>Müvekkil:</b> <span id="resClient"></span></div>
             <div><b>Uyuşmazlık:</b> <span id="resCategory"></span></div>
             <div><b>Karşı Taraf:</b> <span id="resOpponent"></span></div>
             <div><b>Görüşme Türü:</b> <span id="resType"></span></div>
+            <div id="resUdfBadge" style="margin-top: 6px; display: none;"></div>
         </div>
 
-        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 24px;">
-            <button class="btn-submit" style="width: auto; padding: 10px 20px;" onclick="window.print()">🖨️ Ön Görüşme Formunu Yazdır</button>
-            <button class="btn-submit" style="width: auto; padding: 10px 20px; background: #e2e8f0; color: #334155;" onclick="location.reload()">➕ Yeni Ön Kayıt</button>
+        <div class="action-btns">
+            <button class="btn-act" style="background: #2563eb; color: white;" onclick="downloadUyapVekaletXml()">📥 UYAP Vekalet XML İndir</button>
+            <button class="btn-act" style="background: #0f172a; color: white;" onclick="showVekaletModal()">📜 Vekaletname Taslağı</button>
+            <button class="btn-act" style="background: #e2e8f0; color: #334155;" onclick="window.print()">🖨️ Ön Görüşme Formunu Yazdır</button>
+            <button class="btn-act" style="background: #f1f5f9; color: #334155;" onclick="location.reload()">➕ Yeni Ön Kayıt</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Viewer -->
+<div id="vekaletModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:20px; z-index:50;" onclick="closeModal(event)">
+    <div style="background:white; width:100%; max-width:680px; border-radius:12px; padding:24px; max-height:85vh; overflow-y:auto; font-family:'Times New Roman', Times, serif; white-space:pre-wrap; line-height:1.6;" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #cbd5e1; padding-bottom:8px; font-family:sans-serif;">
+            <b>Genel Dava Vekaletnamesi Taslağı (Noterlik & UYAP)</b>
+            <button onclick="document.getElementById('vekaletModal').style.display='none'" style="cursor:pointer; border:none; background:none; font-size:1.2rem;">✖</button>
+        </div>
+        <div id="vekaletModalBody"></div>
+        <div style="margin-top:16px; text-align:right;">
+            <button class="btn-act" style="background:#0f172a; color:white;" onclick="window.print()">🖨️ Yazdır / PDF</button>
         </div>
     </div>
 </div>
 
 <script>
+let uploadedUdfInfo = null;
+let lastSavedIntake = null;
+
+// UDF Dropzone
+const dropzone = document.getElementById('udfDropzone');
+['dragenter', 'dragover'].forEach(name => {
+    dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
+});
+['dragleave', 'drop'].forEach(name => {
+    dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
+});
+
+dropzone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) processUdfFile(files[0]);
+});
+
+function handleUdfUpload(e) {
+    const file = e.target.files[0];
+    if (file) processUdfFile(file);
+}
+
+function processUdfFile(file) {
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+        const base64Data = evt.target.result.split(',')[1];
+        try {
+            const res = await fetch('/api/parse-udf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: file.name, content_base64: base64Data })
+            });
+            if (res.ok) {
+                const parsed = await res.json();
+                uploadedUdfInfo = {
+                    filename: file.name,
+                    document_type: parsed.document_type,
+                    full_text: parsed.full_text,
+                    summary: parsed.summary
+                };
+
+                const badge = document.getElementById('udfStatusBadge');
+                badge.className = 'udf-badge';
+                badge.style.display = 'inline-flex';
+                badge.innerText = `✓ UDF Belgesi Ayrıştırıldı: ${file.name} (${parsed.document_type})`;
+
+                // Append to case summary
+                const cur = document.getElementById('caseSummary').value;
+                document.getElementById('caseSummary').value = cur ?
+                    cur + "\n\n[Ekli UDF Evrakı Özeti]: " + parsed.summary :
+                    "[Ekli UDF Evrakı Özeti]: " + parsed.summary;
+            }
+        } catch (err) {
+            alert('UDF ayrıştırma hatası: ' + err.message);
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
 async function submitLegalForm(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -311,6 +422,10 @@ async function submitLegalForm(e) {
         evidences: evidences,
         consultation_type: document.getElementById('consultationType').value,
         preferred_time: document.getElementById('preferredTime').value.trim(),
+        udf_filename: uploadedUdfInfo ? uploadedUdfInfo.filename : '',
+        udf_document_type: uploadedUdfInfo ? uploadedUdfInfo.document_type : '',
+        udf_content: uploadedUdfInfo ? uploadedUdfInfo.full_text : '',
+        udf_summary: uploadedUdfInfo ? uploadedUdfInfo.summary : '',
         created_at: new Date().toISOString()
     };
 
@@ -325,13 +440,17 @@ async function submitLegalForm(e) {
         if (res.ok) {
             const data = await res.json();
             if (data.intake_code) intakeCode = data.intake_code;
+            payload.intake_code = intakeCode;
+            payload.vekaletname_text = data.vekaletname_text;
         }
     } catch (err) {
-        const local = JSON.parse(localStorage.getItem('avukat_intakes') || '[]');
         payload.intake_code = intakeCode;
+        const local = JSON.parse(localStorage.getItem('avukat_intakes') || '[]');
         local.push(payload);
         localStorage.setItem('avukat_intakes', JSON.stringify(local));
     }
+
+    lastSavedIntake = payload;
 
     document.getElementById('legalForm').style.display = 'none';
     document.getElementById('resultView').style.display = 'block';
@@ -340,6 +459,27 @@ async function submitLegalForm(e) {
     document.getElementById('resCategory').innerText = payload.legal_category;
     document.getElementById('resOpponent').innerText = payload.opponent_name;
     document.getElementById('resType').innerText = payload.consultation_type;
+
+    if (uploadedUdfInfo) {
+        const b = document.getElementById('resUdfBadge');
+        b.style.display = 'block';
+        b.innerHTML = `<b>Ekli Belge:</b> ${uploadedUdfInfo.filename} (${uploadedUdfInfo.document_type})`;
+    }
+}
+
+function downloadUyapVekaletXml() {
+    if (!lastSavedIntake) return;
+    window.open(`/api/export-vekalet-xml?code=${lastSavedIntake.intake_code}`, '_blank');
+}
+
+function showVekaletModal() {
+    if (!lastSavedIntake) return;
+    document.getElementById('vekaletModalBody').innerText = lastSavedIntake.vekaletname_text || "Vekaletname taslağı oluşturuldu.";
+    document.getElementById('vekaletModal').style.display = 'flex';
+}
+
+function closeModal(e) {
+    if (e.target.id === 'vekaletModal') document.getElementById('vekaletModal').style.display = 'none';
 }
 </script>
 

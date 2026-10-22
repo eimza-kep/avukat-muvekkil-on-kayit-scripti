@@ -1,60 +1,119 @@
-# ⚖️ Hukuk Büroları İçin Müvekkil Ön Görüşme ve Çıkar Çatışması Scripti
+# ⚖️ Hukuk Büroları İçin Müvekkil Ön Görüşme, Çıkar Çatışması ve UDF Portalı
 
-[![CI](https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti/actions/workflows/ci.yml/badge.svg)](https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti/actions/workflows/ci.yml)
+[![Avukat Portal CI](https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti/actions/workflows/ci.yml/badge.svg)](https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti/actions/workflows/ci.yml)
 [![Canlı Demo](https://img.shields.io/badge/Demo-Canl%C4%B1%20Test%20Et-brightgreen.svg)](https://eimza-kep.github.io/avukat-muvekkil-on-kayit-scripti/)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Lisans: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Kurulum Süresi](https://img.shields.io/badge/Kurulum-1%20Dakika-brightgreen)](#)
-[![Bağımlılık](https://img.shields.io/badge/ba%C4%9F%C4%B1ml%C4%B1l%C4%B1k-0%20(S%C4%B1f%C4%B1r)-blue)](#)
+[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://python.org)
+[![PHP: 7.4+](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net)
 
-Avukatlar, hukuk büroları ve arabulucuların web sitelerine veya intranetlerine **1 dakikada kurabileceği**, 1136 Sayılı Avukatlık Kanunu'na tam uyumlu **Müvekkil Ön Görüşme, Dosya Kabul ve Çıkar Çatışması (Conflict Check) Scripti**.
-
----
-
-## 🌟 Temel Özellikler
-
-1. **Prestijli ve Kurumsal Tasarım:**
-   - Müvekkil adayı bilgileri (Bireysel / Tüzel Kişi, TCKN/VKN, İletişim).
-   - Hukuki Uyuşmazlık Kategorisi (İş Hukuku, Gayrimenkul & Kira, Ticaret & Şirketler, İcra & Alacak, Aile & Boşanma vb.).
-   - Olay özeti ve mevcut delil envanteri kontrol listesi (Sözleşme, dekont, WhatsApp yazışması, ihtarname).
-2. **Çıkar Çatışması (Conflict Check) Denetimi (Avukatlık Kanunu Md. 38):**
-   - Karşı taraf bilgileri zorunlu olarak toplanır.
-   - Yönetim panelindeki canlı arama çubuğu ile geçmiş müvekkiller ve karşı taraflar taranarak çıkar çatışması riski anında tespit edilir.
-3. **Avukatlık Sır Saklama ve Gizlilik Beyanı (Avukatlık Kanunu Md. 36):**
-   - Form sonunda yer alan yasal gizlilik ve aydınlatma onayı ile mesleki etik kurallarına tam uyum sağlanır.
-4. **Dosya Kabul ve Randevu Yönetim Paneli (`admin.html`):**
-   - Başvuruları listeleme, filtreleme ve aşamalarını takip etme (`Ön İncelemede` -> `Randevu Verildi` -> `Vekaletname Alındı / Dosya Açıldı` -> `Çıkar Çatışması / Red`).
-   - Tek tıkla Excel/CSV dışa aktarma.
-5. **Çift Arka Uç Desteği:**
-   - **cPanel / Paylaşımlı Hosting:** `api.php` ve JSON depolama.
-   - **VPS / Yerel:** Python `server.py` ve SQLite veritabanı.
-   - **Statik:** Tarayıcı yerel hafızası (`localStorage`).
+Avukatlar, hukuk büroları ve arabulucular için; 1136 Sayılı Avukatlık Kanunu'na tam uyumlu **Müvekkil Ön Görüşme ve Dosya Kabul**, **Çıkar Çatışması (Conflict Check)** denetimi, **UYAP UDF Evrak Ayrıştırıcı** ve **UYAP Avukat Portalı Vekaletname XML Dışa Aktarıcısı** barındıran açık kaynaklı LegalTech yazılımı.
 
 ---
 
-## 🚀 1 Dakikada Kurulum
+## 🌟 Temel Yetenekler
 
-### 1. Windows'ta Tek Tıkla Çalıştırma (Test & Demo)
-Klasördeki **`Baslat.bat`** dosyasına çift tıklayın! Yerel sunucu otomatik başlar ve tarayıcınızda form açılır.
+1. **📄 UYAP Doküman Editörü (.udf) Ayrıştırıcı Entegrasyonu:**
+   - Müvekkil adayının görüşmede getirdiği veya sisteme yüklediği mahkeme dilekçesi, tensip zaptı veya bilirkişi raporu `.udf` dosyalarını anında analiz eder, metin ve özet çıkararak doğrudan müvekkil kartına bağlar (`/api/upload-udf` & `/api/parse-udf`).
+2. **📜 UYAP Avukat Portalı Vekaletname Taslağı ve XML Çıktısı:**
+   - Müvekkil kabul edildiğinde; TBB ve Noterlik standartlarında Ahzu Kabz, Sulh, İbra, Arabuluculuk ve Tevkil yetkilerini içeren **Genel Dava Vekaletnamesi Taslağı** ve UYAP Avukat Portalı ile uyumlu XML çıktısı üretir (`/api/export-vekalet-xml`).
+3. **🔍 Çıkar Çatışması (Conflict of Interest) Denetimi (Avukatlık Kanunu Md. 38):**
+   - Karşı taraf bilgileri (Ad/Unvan, TCKN/VKN) zorunlu olarak toplanır.
+   - Yönetim panelindeki canlı arama motoru ile geçmiş müvekkiller ve karşı taraflar anlık taranarak çıkar çatışması riski kırmızı alarm ile bildirilir.
+4. **🔒 Avukatlık Sır Saklama ve KVKK Güvencesi (Avukatlık Kanunu Md. 36):**
+   - Form sonunda yer alan yasal aydınlatma onayı ile mesleki gizlilik ve sır saklama ilkelerine tam uyum sağlanır.
+5. **📊 Dosya Kabul ve Randevu Yönetim Paneli (`admin.html`):**
+   - Dosya takip kodu (`DOSYA-2026-XXXX`) ile arama, aşama takibi (`Ön İncelemede` -> `Randevu Verildi` -> `Vekaletname Alındı / Dosya Açıldı` -> `Çıkar Çatışması / Red`), UDF belgesi inceleme ve Excel/CSV dışa aktarımı.
+6. **🚀 Sıfır Bağımlılık (Zero-Dependency):**
+   - Harici kütüphane gerektirmeyen standart Python modülleri (`sqlite3`, `zipfile`, `xml.etree`).
 
-### 2. Paylaşımlı Hosting / cPanel (Apache & PHP)
-1. Dosyaları zip olarak indirin.
-2. Sitenizin `public_html/on-gorusme` dizinine yükleyin.
-3. `https://siteniz.com/on-gorusme/` adresinden doğrudan kullanın!
+---
 
-### 3. Python Sunucusu ile Çalıştırma
+## 🚀 Hızlı Başlangıç
+
+### 1. Windows (Tek Tıkla Çalıştır)
+1. Repoyu indirin veya klonlayın.
+2. `Baslat.bat` dosyasına çift tıklayın.
+3. Otomatik olarak tarayıcınızda açılır:
+   - Müvekkil Ön Kayıt Formu: `http://localhost:8082`
+   - Dosya Yönetim Paneli: `http://localhost:8082/admin.html`
+
+### 2. Linux & macOS
 ```bash
-python server.py
+git clone https://github.com/eimza-kep/avukat-muvekkil-on-kayit-scripti.git
+cd avukat-muvekkil-on-kayit-scripti
+chmod +x baslat.sh
+./baslat.sh
 ```
-- Müvekkil Ön Görüşme Formu: `http://localhost:8082/index.html`
-- Dosya Kabul Yönetim Paneli: `http://localhost:8082/admin.html`
+
+### 3. Docker ile Çalıştırma
+```bash
+docker build -t avukat-portal .
+docker run -d -p 8082:8082 -v $(pwd)/hukuk_dosyalar.db:/app/hukuk_dosyalar.db avukat-portal
+```
+
+### 4. PHP / cPanel Paylaşımlı Hosting
+Dosyaları sitenizin `public_html/on-kayit` dizinine yükleyin. `api.php` arka ucu JSON tabanlı veritabanı ile otomatik çalışacaktır.
+
+---
+
+## 🔌 API Uç Noktaları
+
+| Yöntem | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/` veya `/index.html` | Müvekkil ön görüşme başvuru formu |
+| `GET` | `/admin.html` | Avukat dosya kabul ve conflict check paneli |
+| `GET` | `/health` | Servis sağlık durumu kontrolü |
+| `GET` | `/api/dosya-listesi` | Tüm kayıtlı başvuruların dökümü |
+| `POST` | `/api/on-kayit` | Yeni müvekkil ön görüşme kaydı oluşturma |
+| `GET` | `/api/vekaletname-taslagi?code=...` | Dosyaya ait genel dava vekaletname metni |
+| `GET` | `/api/export-vekalet-xml?code=...` | UYAP Avukat Portalı vekalet XML dosyası indirme |
+| `POST` | `/api/parse-udf` | Ham veya base64 UYAP UDF belgesi ayrıştırma |
+| `POST` | `/api/upload-udf` | UDF evrakını doğrudan müvekkil dosyasına bağlama |
+
+---
+
+## 📊 Dosya Yapısı
+
+```
+avukat-muvekkil-on-kayit-scripti/
+├── index.html              # Müvekkil ön kayıt formu ve UDF sürükle-bırak yükleyici
+├── admin.html              # Avukat dosya kabul, conflict check ve vekalet paneli
+├── server.py               # Python SQLite HTTP REST sunucusu (Port 8082)
+├── api.php                 # PHP tabanlı REST backend
+├── Dockerfile              # Docker container dağıtım dosyası
+├── Baslat.bat              # Windows tek tıkla başlatıcı
+├── baslat.sh               # Linux / macOS başlatıcı
+├── scripts/
+│   ├── udf_parser.py       # UDF ayrıştırıcı ve UYAP vekaletname motoru
+│   └── test_avukat.py      # Kapsamlı birim test paketi
+├── .github/
+│   └── workflows/ci.yml    # GitHub Actions otomatik CI test akışı
+└── README.md               # Detaylı dokümantasyon
+```
+
+---
+
+## 🧪 Birim Testleri Çalıştırma
+
+```bash
+python scripts/test_avukat.py
+```
+
+Test paketi şunları doğrular:
+- ✅ SQLite veritabanı şeması ve migration bütünlüğü
+- ✅ Avukatlık Kanunu m. 38 çıkar çatışması (conflict check) sorgulama mantığı
+- ✅ UYAP UDF (ZIP ve XML) dosya ayrıştırma, metin ve özet çıkarma
+- ✅ TBB standartlarında Ahzu Kabz yetkili vekaletname metni ve UYAP XML şeması
 
 ---
 
 ## 🌐 LegalTech & E-Dönüşüm Açık Kaynak Ekosistemi
 
-Bu ön kayıt ve müvekkil kabul yazılımı, [@eimza-kep](https://github.com/eimza-kep) açık kaynak ekosisteminin hukuk bürosu otomasyon modülüdür. İlgili diğer araçlar:
+Bu yazılım, [@eimza-kep](https://github.com/eimza-kep) açık kaynak LegalTech ekosisteminin hukuk bürosu otomasyon bileşenidir. İlgili diğer araçlar:
 
 * ⚖️ [avukat-hukuk-excel-hesaplamalari](https://github.com/eimza-kep/avukat-hukuk-excel-hesaplamalari) - Baro AAÜT vekalet ücreti, arabuluculuk ve icra harç hesaplayıcıları.
+* ⚖️ [avukat-arabuluculuk-basvuru-scripti](https://github.com/eimza-kep/avukat-arabuluculuk-basvuru-scripti) - UYAP Arabuluculuk Portalı XML ve ilk oturum evrak portali.
 * 📄 [udf2md](https://github.com/eimza-kep/udf2md) - UYAP `.udf` dava dosyalarını Markdown ve JSON'a dönüştürücü LegalTech aracı.
 * 📝 [javascript-udf-editor](https://github.com/eimza-kep/uyap-web-udf-editor) - Tarayıcı tabanlı sıfır Java UYAP dilekçe görüntüleyici ve düzenleyici.
 * 🔒 [kurumsal-kvkk-basvuru-scripti](https://github.com/eimza-kep/kurumsal-kvkk-basvuru-scripti) - Müvekkil KVKK aydınlatma ve açık rıza kayıt portali.
@@ -64,5 +123,4 @@ Bu ön kayıt ve müvekkil kabul yazılımı, [@eimza-kep](https://github.com/ei
 
 ## 📜 Lisans
 
-Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Bireysel avukatlar ve kurumsal hukuk büroları tarafından serbestçe kullanılabilir.
-
+Bu proje **MIT Lisansı** ile lisanslanmıştır. Bireysel avukatlar ve kurumsal hukuk büroları tarafından serbestçe kullanılabilir.
