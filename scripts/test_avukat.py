@@ -20,7 +20,10 @@ from scripts.udf_parser import (
     parse_udf_bytes,
     create_sample_udf_bytes,
     generate_vekaletname_text,
-    generate_uyap_vekalet_xml
+    generate_uyap_vekalet_xml,
+    check_conflict_of_interest,
+    generate_avukatlik_ucret_sozlesmesi,
+    generate_gorusme_tutanagi
 )
 
 class TestAvukatPortal(unittest.TestCase):
@@ -140,6 +143,122 @@ AÇIKLAMALAR : Müvekkil davalı işyerinde 5 yıl çalışmış olup hak edişl
         # XML geçerlilik doğrulaması
         root = ET.fromstring(xml_str)
         self.assertEqual(root.tag, "UyapVekaletname")
+
+    def test_conflict_check_opponent_is_former_client(self):
+        # Önceki müvekkil: Barış İnşaat A.Ş. (VKN: 9876543210)
+        existing_records = [
+            {
+                "intake_code": "DOSYA-2026-TEST01",
+                "full_name": "Barış İnşaat A.Ş.",
+                "id_number": "9876543210",
+                "opponent_name": "Eski Davacı",
+                "opponent_vkn": "1111111111",
+                "status": "Vekaletname / Dosya Açıldı",
+                "legal_category": "Ticaret Hukuku"
+            }
+        ]
+        # Yeni başvuru: Müvekkil adayı Ali Veli, Karşı taraf Barış İnşaat A.Ş. (VKN: 9876543210)
+        query = {
+            "full_name": "Ali Veli",
+            "id_number": "22233344455",
+            "opponent_name": "Barış İnşaat A.Ş.",
+            "opponent_vkn": "9876543210"
+        }
+        res = check_conflict_of_interest(existing_records, query)
+        self.assertTrue(res["has_conflict"])
+        self.assertEqual(res["risk_level"], "CRITICAL")
+        self.assertGreater(res["conflict_count"], 0)
+        self.assertEqual(res["matches"][0]["type"], "OPPONENT_IS_FORMER_CLIENT")
+        self.assertIn("REDDİ zorunludur", res["matches"][0]["detail"])
+        self.assertIn("REDDEDİLMELİDİR", res["legal_warning"])
+
+    def test_conflict_check_applicant_was_opponent(self):
+        # Önceki dosyada hasım/karşı taraf: Ahmet Çelik (TCKN: 33344455566)
+        existing_records = [
+            {
+                "intake_code": "DOSYA-2026-TEST02",
+                "full_name": "Müvekkil Ltd. Şti.",
+                "id_number": "9998887776",
+                "opponent_name": "Ahmet Çelik",
+                "opponent_vkn": "33344455566",
+                "status": "Dava Devam Ediyor",
+                "legal_category": "İş Hukuku"
+            }
+        ]
+        # Yeni başvuru: Ahmet Çelik büromuza müvekkil olmak için başvuruyor!
+        query = {
+            "full_name": "Ahmet Çelik",
+            "id_number": "33344455566",
+            "opponent_name": "Üçüncü Şahıs",
+            "opponent_vkn": "5555555555"
+        }
+        res = check_conflict_of_interest(existing_records, query)
+        self.assertTrue(res["has_conflict"])
+        self.assertEqual(res["risk_level"], "CRITICAL")
+        self.assertEqual(res["matches"][0]["type"], "APPLICANT_WAS_OPPONENT")
+
+    def test_conflict_check_clean(self):
+        existing_records = [
+            {
+                "intake_code": "DOSYA-2026-TEST03",
+                "full_name": "Mevcut Müvekkil",
+                "id_number": "11111111111",
+                "opponent_name": "Eski Hasım",
+                "opponent_vkn": "2222222222"
+            }
+        ]
+        query = {
+            "full_name": "Tamamen Bağımsız Şahıs",
+            "id_number": "77788899900",
+            "opponent_name": "Farklı Karşı Taraf",
+            "opponent_vkn": "4444444444"
+        }
+        res = check_conflict_of_interest(existing_records, query)
+        self.assertFalse(res["has_conflict"])
+        self.assertEqual(res["risk_level"], "CLEAN")
+        self.assertEqual(res["conflict_count"], 0)
+
+    def test_avukatlik_ucret_sozlesmesi(self):
+        client = {
+            "full_name": "Selin Aydın",
+            "id_number": "11223344556",
+            "city": "İstanbul",
+            "phone": "05321112233",
+            "intake_code": "DOSYA-2026-7788",
+            "legal_category": "İş Hukuku",
+            "opponent_name": "Global Lojistik A.Ş."
+        }
+        # Nispi sözleşme
+        txt_nispi = generate_avukatlik_ucret_sozlesmesi(client, terms={"ucret_turu": "nispi", "ucret_orani": 0.16})
+        self.assertIn("AVUKATLIK ÜCRET SÖZLEŞMESİ", txt_nispi)
+        self.assertIn("Madde 163", txt_nispi)
+        self.assertIn("Madde 164/Son", txt_nispi)
+        self.assertIn("KARŞI TARAF VEKALET ÜCRETİ", txt_nispi)
+        self.assertIn("AVUKATA AİTTİR", txt_nispi)
+        self.assertIn("%16.0", txt_nispi)
+        self.assertIn("Global Lojistik A.Ş.", txt_nispi)
+
+        # Maktu sözleşme
+        txt_maktu = generate_avukatlik_ucret_sozlesmesi(client, terms={"ucret_turu": "maktu", "ucret_tutari": 60000.0})
+        self.assertIn("60,000.00 TL", txt_maktu)
+
+    def test_gorusme_tutanagi(self):
+        client = {
+            "full_name": "Kemal Sunal",
+            "id_number": "99900011122",
+            "intake_code": "DOSYA-2026-9090",
+            "legal_category": "Telif Hakları ve Fikri Mülkiyet",
+            "opponent_name": "Televizyon Kanalı A.Ş.",
+            "case_summary": "Film yayın telif haklarının izinsiz kullanılması.",
+            "evidences": ["Film Sözleşmesi", "Bilirkişi Raporu"]
+        }
+        txt = generate_gorusme_tutanagi(client)
+        self.assertIn("MÜVEKKİL İLK ÖN GÖRÜŞME VE DOSYA KABUL TUTANAĞI", txt)
+        self.assertIn("Madde 36", txt)
+        self.assertIn("Sır Saklama", txt)
+        self.assertIn("Kemal Sunal", txt)
+        self.assertIn("Televizyon Kanalı A.Ş.", txt)
+        self.assertIn("Film Sözleşmesi", txt)
 
 if __name__ == "__main__":
     print("=" * 60)

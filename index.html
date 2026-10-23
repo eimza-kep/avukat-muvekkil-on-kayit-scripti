@@ -315,7 +315,9 @@
         <div class="action-btns">
             <button class="btn-act" style="background: #2563eb; color: white;" onclick="downloadUyapVekaletXml()">📥 UYAP Vekalet XML İndir</button>
             <button class="btn-act" style="background: #0f172a; color: white;" onclick="showVekaletModal()">📜 Vekaletname Taslağı</button>
-            <button class="btn-act" style="background: #e2e8f0; color: #334155;" onclick="window.print()">🖨️ Ön Görüşme Formunu Yazdır</button>
+            <button class="btn-act" style="background: #1e3a8a; color: white;" onclick="showSozlesmeModal()">📜 Avukatlık Ücret Sözleşmesi</button>
+            <button class="btn-act" style="background: #475569; color: white;" onclick="showGorusmeModal()">📄 Görüşme & Delil Tutanağı</button>
+            <button class="btn-act" style="background: #e2e8f0; color: #334155;" onclick="window.print()">🖨️ Yazdır</button>
             <button class="btn-act" style="background: #f1f5f9; color: #334155;" onclick="location.reload()">➕ Yeni Ön Kayıt</button>
         </div>
     </div>
@@ -323,9 +325,9 @@
 
 <!-- Modal Viewer -->
 <div id="vekaletModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:20px; z-index:50;" onclick="closeModal(event)">
-    <div style="background:white; width:100%; max-width:680px; border-radius:12px; padding:24px; max-height:85vh; overflow-y:auto; font-family:'Times New Roman', Times, serif; white-space:pre-wrap; line-height:1.6;" onclick="event.stopPropagation()">
+    <div style="background:white; width:100%; max-width:740px; border-radius:12px; padding:24px; max-height:85vh; overflow-y:auto; font-family:'Times New Roman', Times, serif; white-space:pre-wrap; line-height:1.6;" onclick="event.stopPropagation()">
         <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #cbd5e1; padding-bottom:8px; font-family:sans-serif;">
-            <b>Genel Dava Vekaletnamesi Taslağı (Noterlik & UYAP)</b>
+            <b id="vekaletModalTitle">Genel Dava Vekaletnamesi Taslağı (Noterlik & UYAP)</b>
             <button onclick="document.getElementById('vekaletModal').style.display='none'" style="cursor:pointer; border:none; background:none; font-size:1.2rem;">✖</button>
         </div>
         <div id="vekaletModalBody"></div>
@@ -442,6 +444,8 @@ async function submitLegalForm(e) {
             if (data.intake_code) intakeCode = data.intake_code;
             payload.intake_code = intakeCode;
             payload.vekaletname_text = data.vekaletname_text;
+            payload.sozlesme_text = data.sozlesme_text;
+            payload.tutanak_text = data.tutanak_text;
         }
     } catch (err) {
         payload.intake_code = intakeCode;
@@ -474,7 +478,22 @@ function downloadUyapVekaletXml() {
 
 function showVekaletModal() {
     if (!lastSavedIntake) return;
+    document.getElementById('vekaletModalTitle').innerText = 'Genel Dava Vekaletnamesi Taslağı (Noterlik & UYAP)';
     document.getElementById('vekaletModalBody').innerText = lastSavedIntake.vekaletname_text || "Vekaletname taslağı oluşturuldu.";
+    document.getElementById('vekaletModal').style.display = 'flex';
+}
+
+function showSozlesmeModal() {
+    if (!lastSavedIntake) return;
+    document.getElementById('vekaletModalTitle').innerText = 'Avukatlık Ücret Sözleşmesi (1136 s. K. m. 163)';
+    document.getElementById('vekaletModalBody').innerText = lastSavedIntake.sozlesme_text || "Avukatlık ücret sözleşmesi tanzim edildi.";
+    document.getElementById('vekaletModal').style.display = 'flex';
+}
+
+function showGorusmeModal() {
+    if (!lastSavedIntake) return;
+    document.getElementById('vekaletModalTitle').innerText = 'Müvekkil İlk Görüşme ve Delil Teslim Tutanağı';
+    document.getElementById('vekaletModalBody').innerText = lastSavedIntake.tutanak_text || "Görüşme ve delil teslim tutanağı tanzim edildi.";
     document.getElementById('vekaletModal').style.display = 'flex';
 }
 

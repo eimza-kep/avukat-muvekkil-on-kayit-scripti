@@ -7,7 +7,7 @@
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://python.org)
 [![PHP: 7.4+](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net)
 
-Avukatlar, hukuk büroları ve arabulucular için; 1136 Sayılı Avukatlık Kanunu'na tam uyumlu **Müvekkil Ön Görüşme ve Dosya Kabul**, **Çıkar Çatışması (Conflict Check)** denetimi, **UYAP UDF Evrak Ayrıştırıcı** ve **UYAP Avukat Portalı Vekaletname XML Dışa Aktarıcısı** barındıran açık kaynaklı LegalTech yazılımı.
+Avukatlar, hukuk büroları ve arabulucular için; 1136 Sayılı Avukatlık Kanunu'na tam uyumlu **Müvekkil Ön Görüşme ve Dosya Kabul**, **Çıkar Çatışması (Conflict Check) Denetim Motoru (m. 38)**, **Avukatlık Ücret Sözleşmesi Tanzimi (m. 163 & 164)**, **UYAP UDF Evrak Ayrıştırıcı** ve **UYAP Avukat Portalı Vekaletname XML Dışa Aktarıcısı** barındıran açık kaynaklı LegalTech yazılımı.
 
 ---
 
@@ -17,14 +17,19 @@ Avukatlar, hukuk büroları ve arabulucular için; 1136 Sayılı Avukatlık Kanu
    - Müvekkil adayının görüşmede getirdiği veya sisteme yüklediği mahkeme dilekçesi, tensip zaptı veya bilirkişi raporu `.udf` dosyalarını anında analiz eder, metin ve özet çıkararak doğrudan müvekkil kartına bağlar (`/api/upload-udf` & `/api/parse-udf`).
 2. **📜 UYAP Avukat Portalı Vekaletname Taslağı ve XML Çıktısı:**
    - Müvekkil kabul edildiğinde; TBB ve Noterlik standartlarında Ahzu Kabz, Sulh, İbra, Arabuluculuk ve Tevkil yetkilerini içeren **Genel Dava Vekaletnamesi Taslağı** ve UYAP Avukat Portalı ile uyumlu XML çıktısı üretir (`/api/export-vekalet-xml`).
-3. **🔍 Çıkar Çatışması (Conflict of Interest) Denetimi (Avukatlık Kanunu Md. 38):**
+3. **🔍 Çıkar Çatışması (Conflict of Interest) Denetim Motoru (Avukatlık Kanunu Md. 38):**
    - Karşı taraf bilgileri (Ad/Unvan, TCKN/VKN) zorunlu olarak toplanır.
-   - Yönetim panelindeki canlı arama motoru ile geçmiş müvekkiller ve karşı taraflar anlık taranarak çıkar çatışması riski kırmızı alarm ile bildirilir.
-4. **🔒 Avukatlık Sır Saklama ve KVKK Güvencesi (Avukatlık Kanunu Md. 36):**
-   - Form sonunda yer alan yasal aydınlatma onayı ile mesleki gizlilik ve sır saklama ilkelerine tam uyum sağlanır.
-5. **📊 Dosya Kabul ve Randevu Yönetim Paneli (`admin.html`):**
-   - Dosya takip kodu (`DOSYA-2026-XXXX`) ile arama, aşama takibi (`Ön İncelemede` -> `Randevu Verildi` -> `Vekaletname Alındı / Dosya Açıldı` -> `Çıkar Çatışması / Red`), UDF belgesi inceleme ve Excel/CSV dışa aktarımı.
-6. **🚀 Sıfır Bağımlılık (Zero-Dependency):**
+   - TCKN/VKN ve unvan çapraz taramalı derin analiz motoru (`/api/conflict-check`) sayesinde:
+     - Karşı taraf eski müvekkilimiz ise: **🚨 KRİTİK ALARM (İşin reddi zorunludur)**
+     - Başvuran eski bir hasım/davalı ise: **🚨 KRİTİK ALARM (Menfaat çatışması riski)**
+     - İsim/unvan benzerliklerinde: **⚠️ YÜKSEK RİSK UYARISI**
+4. **📜 1136 Sayılı Kanun m. 163 & 164 Avukatlık Ücret Sözleşmesi Tanzimi:**
+   - Nispi (%) veya maktu (TL) avukatlık ücreti, KDV, ödeme vadesi, HMK m. 120 gider avansı ve **Avukatlık Kanunu m. 164/son fıkra uyarınca karşı taraf yasal vekalet ücretinin avukata ait olduğu** hükmünü içeren resmi Avukatlık Ücret Sözleşmesi üretir (`/api/ucret-sozlesmesi`).
+5. **📋 Müvekkil İlk Görüşme ve Delil Teslim Tutanağı:**
+   - Avukatlık Kanunu m. 36 mesleki sır saklama güvencesiyle görüşme özeti, teslim alınan deliller ve müvekkil taleplerini kayıt altına alan imzalı tutanak çıktısı (`/api/gorusme-tutanagi`).
+6. **📊 Dosya Kabul ve Randevu Yönetim Paneli (`admin.html`):**
+   - Dosya takip kodu (`DOSYA-2026-XXXX`) ile arama, aşama takibi (`Ön İncelemede` -> `Randevu Verildi` -> `Vekaletname Alındı / Dosya Açıldı` -> `Çıkar Çatışması / Red`), UDF belgesi inceleme, canlı conflict check araması ve Excel/CSV dışa aktarımı.
+7. **🚀 Sıfır Bağımlılık (Zero-Dependency):**
    - Harici kütüphane gerektirmeyen standart Python modülleri (`sqlite3`, `zipfile`, `xml.etree`).
 
 ---
@@ -64,8 +69,12 @@ Dosyaları sitenizin `public_html/on-kayit` dizinine yükleyin. `api.php` arka u
 | `GET` | `/` veya `/index.html` | Müvekkil ön görüşme başvuru formu |
 | `GET` | `/admin.html` | Avukat dosya kabul ve conflict check paneli |
 | `GET` | `/health` | Servis sağlık durumu kontrolü |
-| `GET` | `/api/dosya-listesi` | Tüm kayıtlı başvuruların dökümü |
+| `GET` | `/api/dosya-listesi` | Tüm kayıtlı başvuruların dökümü ve anlık conflict analizi |
 | `POST` | `/api/on-kayit` | Yeni müvekkil ön görüşme kaydı oluşturma |
+| `GET/POST` | `/api/conflict-check` | Avukatlık Kanunu m. 38 çıkar çatışması derin sorgulama motoru |
+| `GET/POST` | `/api/ucret-sozlesmesi` | Avukatlık Kanunu m. 163 Avukatlık Ücret Sözleşmesi tanzimi |
+| `GET/POST` | `/api/gorusme-tutanagi` | Müvekkil ilk ön görüşme ve delil teslim tutanağı üretme |
+| `GET` | `/api/export-sozlesme-txt?code=...` | Ücret sözleşmesini veya görüşme tutanağını `.txt` olarak indirme |
 | `GET` | `/api/vekaletname-taslagi?code=...` | Dosyaya ait genel dava vekaletname metni |
 | `GET` | `/api/export-vekalet-xml?code=...` | UYAP Avukat Portalı vekalet XML dosyası indirme |
 | `POST` | `/api/parse-udf` | Ham veya base64 UYAP UDF belgesi ayrıştırma |
@@ -102,7 +111,9 @@ python scripts/test_avukat.py
 
 Test paketi şunları doğrular:
 - ✅ SQLite veritabanı şeması ve migration bütünlüğü
-- ✅ Avukatlık Kanunu m. 38 çıkar çatışması (conflict check) sorgulama mantığı
+- ✅ 1136 Sayılı Avukatlık Kanunu m. 38 çıkar çatışması (conflict check) çapraz sorgulama ve alarm mantığı
+- ✅ 1136 Sayılı Kanun m. 163 & 164 nispi ve maktu Avukatlık Ücret Sözleşmesi tanzimi
+- ✅ Müvekkil ilk ön görüşme ve delil teslim tutanağı üretimi
 - ✅ UYAP UDF (ZIP ve XML) dosya ayrıştırma, metin ve özet çıkarma
 - ✅ TBB standartlarında Ahzu Kabz yetkili vekaletname metni ve UYAP XML şeması
 

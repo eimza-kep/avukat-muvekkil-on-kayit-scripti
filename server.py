@@ -23,7 +23,10 @@ if BASE_DIR not in sys.path:
 from scripts.udf_parser import (
     parse_udf_bytes,
     generate_vekaletname_text,
-    generate_uyap_vekalet_xml
+    generate_uyap_vekalet_xml,
+    check_conflict_of_interest,
+    generate_avukatlik_ucret_sozlesmesi,
+    generate_gorusme_tutanagi
 )
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -111,6 +114,22 @@ class LegalHandler(SimpleHTTPRequestHandler):
             self.handle_export_vekalet_xml(parsed)
             return
 
+        if parsed.path == "/api/conflict-check":
+            self.handle_conflict_check_get(parsed)
+            return
+
+        if parsed.path == "/api/ucret-sozlesmesi":
+            self.handle_get_ucret_sozlesmesi(parsed)
+            return
+
+        if parsed.path == "/api/gorusme-tutanagi":
+            self.handle_get_gorusme_tutanagi(parsed)
+            return
+
+        if parsed.path == "/api/export-sozlesme-txt":
+            self.handle_export_sozlesme_txt(parsed)
+            return
+
         super().do_GET()
 
     def do_POST(self):
@@ -125,6 +144,18 @@ class LegalHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/api/parse-udf":
             self.handle_parse_udf()
+            return
+
+        if parsed.path == "/api/conflict-check":
+            self.handle_conflict_check_post()
+            return
+
+        if parsed.path == "/api/ucret-sozlesmesi":
+            self.handle_create_ucret_sozlesmesi()
+            return
+
+        if parsed.path == "/api/gorusme-tutanagi":
+            self.handle_create_gorusme_tutanagi()
             return
 
         self.send_response(404)
@@ -150,7 +181,165 @@ class LegalHandler(SimpleHTTPRequestHandler):
                         r["evidences"] = json.loads(r["evidences"])
                     except Exception:
                         pass
+                r["conflict_info"] = check_conflict_of_interest(rows, r)
             self.send_json(rows)
+
+    def handle_conflict_check_get(self, parsed):
+        qs = parse_qs(parsed.query)
+        q = qs.get("q", [""])[0]
+        name = qs.get("name", [""])[0] or q
+        id_num = qs.get("id_number", [""])[0]
+        opp_name = qs.get("opponent_name", [""])[0] or (q if not name else "")
+        opp_vkn = qs.get("opponent_vkn", [""])[0]
+        code = qs.get("code", [""])[0]
+
+        query_data = {
+            "full_name": name,
+            "id_number": id_num,
+            "opponent_name": opp_name,
+            "opponent_vkn": opp_vkn,
+            "intake_code": code
+        }
+        res = check_conflict_of_interest(DB_FILE, query_data)
+        self.send_json(res)
+
+    def handle_conflict_check_post(self):
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except Exception:
+            data = {}
+        res = check_conflict_of_interest(DB_FILE, data)
+        self.send_json(res)
+
+    def handle_get_ucret_sozlesmesi(self, parsed):
+        qs = parse_qs(parsed.query)
+        code = qs.get("code", [""])[0]
+        if not code:
+            self.send_json({"error": "Dosya kodu gereklidir."}, status=400)
+            return
+
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM intakes WHERE intake_code = ?", (code,))
+            row = cursor.fetchone()
+
+        if not row:
+            self.send_json({"error": "Dosya bulunamadı."}, status=404)
+            return
+
+        client_data = dict(row)
+        u_turu = qs.get("ucret_turu", ["nispi"])[0]
+        u_orani = float(qs.get("ucret_orani", [0.15])[0])
+        u_tutari = float(qs.get("ucret_tutari", [50000.0])[0])
+        terms = {
+            "ucret_turu": u_turu,
+            "ucret_orani": u_orani,
+            "ucret_tutari": u_tutari
+        }
+        txt = generate_avukatlik_ucret_sozlesmesi(client_data, terms=terms)
+        self.send_json({
+            "success": True,
+            "intake_code": code,
+            "sozlesme_text": txt
+        })
+
+    def handle_create_ucret_sozlesmesi(self):
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except Exception:
+            data = {}
+
+        code = data.get("intake_code")
+        client_data = dict(data)
+        if code:
+            with sqlite3.connect(DB_FILE) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM intakes WHERE intake_code = ?", (code,))
+                row = cursor.fetchone()
+                if row:
+                    client_data = {**dict(row), **data}
+
+        terms = data.get("terms", {})
+        txt = generate_avukatlik_ucret_sozlesmesi(client_data, terms=terms)
+        self.send_json({
+            "success": True,
+            "intake_code": code or "TASLAK",
+            "sozlesme_text": txt
+        })
+
+    def handle_get_gorusme_tutanagi(self, parsed):
+        qs = parse_qs(parsed.query)
+        code = qs.get("code", [""])[0]
+        if not code:
+            self.send_json({"error": "Dosya kodu gereklidir."}, status=400)
+            return
+
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM intakes WHERE intake_code = ?", (code,))
+            row = cursor.fetchone()
+
+        if not row:
+            self.send_json({"error": "Dosya bulunamadı."}, status=404)
+            return
+
+        client_data = dict(row)
+        txt = generate_gorusme_tutanagi(client_data)
+        self.send_json({
+            "success": True,
+            "intake_code": code,
+            "tutanak_text": txt
+        })
+
+    def handle_create_gorusme_tutanagi(self):
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except Exception:
+            data = {}
+        txt = generate_gorusme_tutanagi(data)
+        self.send_json({
+            "success": True,
+            "tutanak_text": txt
+        })
+
+    def handle_export_sozlesme_txt(self, parsed):
+        qs = parse_qs(parsed.query)
+        code = qs.get("code", [""])[0]
+        doc_type = qs.get("type", ["sozlesme"])[0]
+
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM intakes WHERE intake_code = ?", (code,))
+            row = cursor.fetchone()
+
+        if not row:
+            self.send_json({"error": "Dosya bulunamadı."}, status=404)
+            return
+
+        client_data = dict(row)
+        if doc_type == "gorusme":
+            content = generate_gorusme_tutanagi(client_data).encode("utf-8")
+            filename = f"gorusme_tutanagi_{code}.txt"
+        else:
+            content = generate_avukatlik_ucret_sozlesmesi(client_data).encode("utf-8")
+            filename = f"avukatlik_ucret_sozlesmesi_{code}.txt"
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
 
     def handle_get_vekaletname_taslagi(self, parsed):
         qs = parse_qs(parsed.query)
@@ -245,16 +434,22 @@ class LegalHandler(SimpleHTTPRequestHandler):
             ))
             conn.commit()
 
-        # Otomatik vekaletname taslağı oluştur
+        # Otomatik vekaletname, sözleşme ve tutanak taslağı oluştur
         client_data = dict(data)
         client_data["intake_code"] = intake_code
         vekalet_text = generate_vekaletname_text(client_data)
+        sozlesme_text = generate_avukatlik_ucret_sozlesmesi(client_data)
+        tutanak_text = generate_gorusme_tutanagi(client_data)
+        conflict_info = check_conflict_of_interest(DB_FILE, client_data)
 
         resp = {
             "success": True,
             "intake_code": intake_code,
             "message": "Ön görüşme kaydınız başarıyla alındı.",
-            "vekaletname_text": vekalet_text
+            "vekaletname_text": vekalet_text,
+            "sozlesme_text": sozlesme_text,
+            "tutanak_text": tutanak_text,
+            "conflict_info": conflict_info
         }
         self.send_json(resp)
 
