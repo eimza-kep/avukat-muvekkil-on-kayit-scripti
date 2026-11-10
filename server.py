@@ -8,6 +8,7 @@ ve UYAP Avukat Portalı vekaletname şablonları üretir.
 """
 
 import os
+KVKK_ACIK_RIZA_METNI_2026 = 'Avukatlık Kanunu m. 35 ve KVKK m. 5 uyarınca müvekkil adayı verileri 3 yıl yasal süreyle saklanır.'
 import sys
 import json
 import sqlite3
